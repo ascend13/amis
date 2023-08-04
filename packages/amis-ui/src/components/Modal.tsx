@@ -24,6 +24,7 @@ export interface ModalProps extends ThemeProps, LocaleProps {
   size?: any;
   width?: any;
   height?: any;
+  display?: any;
   overlay?: boolean;
   onHide: (e: any) => void;
   closeOnEsc?: boolean;
@@ -34,6 +35,7 @@ export interface ModalProps extends ThemeProps, LocaleProps {
   onExited?: () => void;
   onEntered?: () => void;
   children?: React.ReactNode | Array<React.ReactNode>;
+  maskColor?: string;
 }
 export interface ModalState {}
 const fadeStyles: {
@@ -272,11 +274,21 @@ export class Modal extends React.Component<ModalProps, ModalState> {
       container,
       show,
       size,
+      style,
       overlay,
       width,
       height,
+      display,
+      maskColor,
       classnames: cx
     } = this.props;
+
+    let _width = width;
+    let _height = height;
+    if (size === 'custom') {
+      style?.width && (_width = style.width);
+      style?.height && (_height = style.height);
+    }
 
     return (
       <Transition
@@ -301,9 +313,13 @@ export class Modal extends React.Component<ModalProps, ModalState> {
                 },
                 className
               )}
+              style={{display}}
             >
               {overlay ? (
-                <div className={cx(`Modal-overlay`, fadeStyles[status])} />
+                <div
+                  className={cx(`Modal-overlay`, fadeStyles[status])}
+                  style={{backgroundColor: maskColor}}
+                />
               ) : null}
               <div
                 className={cx(
@@ -311,7 +327,10 @@ export class Modal extends React.Component<ModalProps, ModalState> {
                   contentClassName,
                   contentFadeStyles[status]
                 )}
-                style={{width, height}}
+                style={{
+                  width: _width,
+                  height: _height
+                }}
               >
                 {status === EXITED ? null : children}
               </div>

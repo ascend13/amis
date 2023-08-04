@@ -745,6 +745,8 @@ export const uuidv4 = () => {
 
 export interface TreeItem {
   children?: TreeArray;
+  dialogChildren?: TreeArray;
+  dialogViewChildren?: TreeArray;
   [propName: string]: any;
 }
 export interface TreeArray extends Array<TreeItem> {}
@@ -841,17 +843,22 @@ export function eachTree<T extends TreeItem>(
  */
 export function findTree<T extends TreeItem>(
   tree: Array<T>,
-  iterator: (item: T, key: number, level: number, paths: Array<T>) => any
+  iterator: (item: T, key: number, level: number, paths: Array<T>) => any,
+  childrenName?: string
 ): T | null {
   let result: T | null = null;
 
-  everyTree(tree, (item, key, level, paths) => {
-    if (iterator(item, key, level, paths)) {
-      result = item;
-      return false;
-    }
-    return true;
-  });
+  everyTree(
+    tree,
+    (item, key, level, paths) => {
+      if (iterator(item, key, level, paths)) {
+        result = item;
+        return false;
+      }
+      return true;
+    },
+    childrenName
+  );
 
   return result;
 }
@@ -998,6 +1005,7 @@ export function everyTree<T extends TreeItem>(
     paths: Array<T>,
     indexes: Array<number>
   ) => boolean,
+  childrenName: string = 'children',
   level: number = 1,
   paths: Array<T> = [],
   indexes: Array<number> = []
@@ -1010,8 +1018,9 @@ export function everyTree<T extends TreeItem>(
 
     if (value && item.children?.splice) {
       return everyTree(
-        item.children,
+        item[childrenName],
         iterator,
+        childrenName,
         level + 1,
         paths.concat(item),
         indexes.concat(index)

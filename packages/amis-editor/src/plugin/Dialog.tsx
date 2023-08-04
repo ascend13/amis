@@ -24,7 +24,8 @@ export class DialogPlugin extends BasePlugin {
   wrapperProps = {
     wrapperComponent: InlineModal,
     onClose: noop,
-    show: true
+    show: true,
+    inDesign: true
   };
 
   regions: Array<RegionConfig> = [
@@ -74,6 +75,38 @@ export class DialogPlugin extends BasePlugin {
       eventName: 'cancel',
       eventLabel: '取消',
       description: '点击弹窗取消按钮时触发',
+      dataSchema: [
+        {
+          type: 'object',
+          properties: {
+            'event.data': {
+              type: 'object',
+              title: '弹窗数据'
+            }
+          }
+        }
+      ]
+    },
+    {
+      eventName: 'open',
+      eventLabel: '弹框打开',
+      description: '弹框打开时触发',
+      dataSchema: [
+        {
+          type: 'object',
+          properties: {
+            'event.data': {
+              type: 'object',
+              title: '弹窗数据'
+            }
+          }
+        }
+      ]
+    },
+    {
+      eventName: 'close',
+      eventLabel: '弹框关闭',
+      description: '弹框关闭时触发',
       dataSchema: [
         {
           type: 'object',
@@ -214,10 +247,22 @@ export class DialogPlugin extends BasePlugin {
                 value: true
               }),
               getSchemaTpl('switch', {
+                label: '点击遮罩关闭',
+                name: 'closeOnOutside',
+                value: false
+              }),
+              getSchemaTpl('switch', {
                 label: '可按 Esc 关闭',
                 name: 'closeOnEsc',
                 value: false
               }),
+              {
+                type: 'ae-StatusControl',
+                label: '隐藏按钮区',
+                mode: 'normal',
+                name: 'hideActions',
+                expressionName: 'hideActionsOn'
+              },
               getSchemaTpl('switch', {
                 label: '左下角展示报错消息',
                 name: 'showErrorMsg',
@@ -243,7 +288,7 @@ export class DialogPlugin extends BasePlugin {
                 label: '尺寸',
                 type: 'button-group-select',
                 name: 'size',
-                size: 'sm',
+                size: 'xs',
                 options: [
                   {
                     label: '标准',
@@ -264,11 +309,132 @@ export class DialogPlugin extends BasePlugin {
                   {
                     label: '超大',
                     value: 'xl'
+                  },
+                  {
+                    label: '自定义',
+                    value: 'custom'
                   }
                 ],
                 pipeIn: defaultValue(''),
-                pipeOut: (value: string) => (value ? value : undefined)
+                pipeOut: (value: string) => (value ? value : undefined),
+                onChange: (
+                  value: string,
+                  oldValue: string,
+                  model: any,
+                  form: any
+                ) => {
+                  if (value !== 'custom') {
+                    form.setValueByName('style', undefined);
+                  }
+                }
+              },
+              {
+                type: 'input-number',
+                label: '宽度',
+                name: 'style.width',
+                disabled: true,
+                clearable: true,
+                unitOptions: ['px', '%', 'em', 'vh', 'vw'],
+                visibleOn: 'data.size !== "custom"',
+                pipeIn: (value: any, form: any) => {
+                  if (!form.data.size) {
+                    return '500px';
+                  } else if (form.data.size === 'sm') {
+                    return '350px';
+                  } else if (form.data.size === 'md') {
+                    return '800px';
+                  } else if (form.data.size === 'lg') {
+                    return '1100px';
+                  } else if (form.data.size === 'xl') {
+                    return '90%';
+                  }
+                  return '';
+                }
+              },
+              {
+                type: 'input-number',
+                label: '宽度',
+                name: 'style.width',
+                clearable: true,
+                unitOptions: ['px', '%', 'em', 'vh', 'vw'],
+                visibleOn: 'data.size === "custom"',
+                pipeOut: (value: string) => {
+                  const curValue = parseInt(value);
+                  if (value === 'auto' || curValue || curValue === 0) {
+                    return value;
+                  } else {
+                    return undefined;
+                  }
+                }
+              },
+              {
+                type: 'input-number',
+                label: '高度',
+                name: 'style.height',
+                disabled: true,
+                visibleOn: 'data.size !== "custom"',
+                clearable: true,
+                unitOptions: ['px', '%', 'em', 'vh', 'vw']
+              },
+              {
+                type: 'input-number',
+                label: '高度',
+                name: 'style.height',
+                visibleOn: 'data.size === "custom"',
+                clearable: true,
+                unitOptions: ['px', '%', 'em', 'vh', 'vw'],
+                pipeOut: (value: string) => {
+                  const curValue = parseInt(value);
+                  if (value === 'auto' || curValue || curValue === 0) {
+                    return value;
+                  } else {
+                    return undefined;
+                  }
+                }
               }
+            ]
+          },
+          {
+            title: '标题区',
+            body: [
+              getSchemaTpl('theme:select', {
+                label: '高度',
+                name: 'themeCss.dialogHeaderClassName.height'
+              }),
+              getSchemaTpl('theme:font', {
+                label: '文字',
+                name: 'themeCss.dialogTitleClassName.font'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.dialogHeaderClassName.padding-and-margin',
+                label: '间距'
+              })
+            ]
+          },
+          {
+            title: '内容区',
+            body: [
+              getSchemaTpl('theme:font', {
+                label: '文字',
+                name: 'themeCss.dialogBodyClassName.font'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.dialogBodyClassName.padding-and-margin',
+                label: '间距'
+              })
+            ]
+          },
+          {
+            title: '底部区',
+            body: [
+              getSchemaTpl('theme:select', {
+                label: '高度',
+                name: 'themeCss.dialogFooterClassName.height'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.dialogFooterClassName.padding-and-margin',
+                label: '间距'
+              })
             ]
           },
           {
@@ -282,6 +448,17 @@ export class DialogPlugin extends BasePlugin {
                 name: 'bodyClassName',
                 label: '内容区域'
               })
+            ]
+          },
+          {
+            title: '遮罩',
+            body: [
+              {
+                label: '遮罩颜色',
+                name: 'maskColor',
+                type: 'input-color',
+                clearable: true
+              }
             ]
           }
         ])

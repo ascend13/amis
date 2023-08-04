@@ -1,11 +1,12 @@
 import React from 'react';
 import {reaction} from 'mobx';
-import {Icon, resizeSensor} from 'amis';
+import {Button, Icon, resizeSensor} from 'amis';
 import {EditorStoreType} from '../store/editor';
 import {EditorManager} from '../manager';
 import {observer} from 'mobx-react';
 import {EditorNodeType} from '../store/node';
 import {autobind} from '../util';
+import {isAlive} from 'mobx-state-tree';
 
 export interface BreadcrumbProps {
   store: EditorStoreType;
@@ -195,10 +196,32 @@ export default class Breadcrumb extends React.Component<
     store.setHoverId(id, region);
   }
 
+  @autobind
+  returnPage() {
+    const store = this.props.store;
+    if (isAlive(store.root)) {
+      store.setPreviewDialogId();
+      store.changeOutlineTabsKey('component-outline');
+      if (store.dialogViewType) {
+        // 从弹窗视图返回到页面时将弹窗的配置同步到页面
+        const {body, ...rest} = store.schema.dialogView;
+        const newSchema = {
+          ...store.schema,
+          body,
+          dialogView: rest
+        };
+        store.setSchema(newSchema);
+        store.setDialogViewType();
+      }
+    }
+  }
+
   render() {
     const {store} = this.props;
     const {showLeftScrollBtn, showRightScrollBtn} = this.state;
     const bcn = store.bcn;
+
+    const isDialogView = store.previewDialogId || store.dialogViewType;
 
     return (
       <div className="ae-Breadcrumb" ref={this.breadcrumbRef}>
@@ -263,6 +286,11 @@ export default class Breadcrumb extends React.Component<
           >
             <Icon icon="editor-double-arrow" className="icon" />
           </div>
+        )}
+        {isDialogView && (
+          <Button onClick={this.returnPage} level="link" size="sm">
+            返回页面视图
+          </Button>
         )}
       </div>
     );

@@ -68,8 +68,13 @@ export interface RendererEnv {
   rendererResolver?: (
     path: string,
     schema: Schema,
-    props: any
+    props: any,
+    isDialog?: boolean
   ) => null | RendererConfig;
+  JSONPipeOut?: (
+    obj: any,
+    filterHiddenProps?: boolean | ((key: string, prop: any) => boolean)
+  ) => any;
   copy?: (contents: string, format?: any) => void;
   getModalContainer?: () => HTMLElement;
   theme: ThemeInstance;

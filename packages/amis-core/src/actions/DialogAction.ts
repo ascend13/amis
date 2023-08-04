@@ -66,6 +66,9 @@ export class DialogAction implements RendererAction {
       return;
     }
 
+    console.log('event', event);
+    console.log('action', action);
+
     renderer.props.onAction?.(
       event,
       {

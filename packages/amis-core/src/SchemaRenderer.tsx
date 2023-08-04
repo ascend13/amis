@@ -19,11 +19,12 @@ import {anyChanged, chainEvents, autobind} from './utils/helper';
 import {SimpleMap} from './utils/SimpleMap';
 import {bindEvent, dispatchEvent, RendererEvent} from './utils/renderer-event';
 import {isAlive} from 'mobx-state-tree';
-import {reaction} from 'mobx';
+import {action, reaction} from 'mobx';
 import {resolveVariableAndFilter} from './utils/tpl-builtin';
 import {buildStyle} from './utils/style';
 import {StatusScopedProps} from './StatusScoped';
 import {filter} from './utils/tpl';
+import {cloneDeep} from 'lodash';
 
 interface SchemaRendererProps
   extends Partial<Omit<RendererProps, 'statusStore'>>,
@@ -71,6 +72,8 @@ export class SchemaRenderer extends React.Component<SchemaRendererProps, any> {
 
   rendererKey = '';
   renderer: RendererConfig | null;
+  dialogRenderer: RendererConfig | null;
+  drawerRenderer: RendererConfig | null;
   ref: any;
   cRef: any;
 
@@ -149,6 +152,48 @@ export class SchemaRenderer extends React.Component<SchemaRendererProps, any> {
   resolveRenderer(props: SchemaRendererProps, force = false): any {
     let schema = props.schema;
     let path = props.$path;
+
+    // let event = schema.onEvent;
+    // if (event) {
+    //   let eventKeys = Object.keys(event).filter((key: string) => {
+    //     return event[key].actions?.length;
+    //   });
+    //   let dialogAction: any[] = [];
+    //   eventKeys.forEach(key => {
+    //     let actions = event[key].actions;
+    //     actions.forEach((action: any) => {
+    //       if (
+    //         action.actionType === 'dialog' ||
+    //         action.actionType === 'drawer' ||
+    //         action.actionType === 'confirmDialog'
+    //       ) {
+    //         dialogAction.push(action);
+    //       }
+    //     });
+    //   });
+    //   const rendererResolver = props.env.rendererResolver || resolveRenderer;
+
+    //   dialogAction.forEach(item => {
+    //     if (
+    //       item.actionType === 'dialog' ||
+    //       item.actionType === 'confirmDialog'
+    //     ) {
+    //       this.dialogRenderer = rendererResolver(
+    //         'dialog',
+    //         item.dialog || item.args,
+    //         props,
+    //         true
+    //       );
+    //     } else if (item.actionType === 'drawer') {
+    //       this.drawerRenderer = rendererResolver(
+    //         'drawer',
+    //         item.drawer,
+    //         props,
+    //         true
+    //       );
+    //     }
+    //   });
+    // }
 
     if (schema && schema.$ref) {
       schema = {
@@ -317,6 +362,113 @@ export class SchemaRenderer extends React.Component<SchemaRendererProps, any> {
       (rest as any).invisible = true;
     }
 
+    // const dialogPropsList: any[] = [];
+    // const event = schema.onEvent;
+    // 查找弹窗事件
+    // if (event) {
+    //   let eventKeys = Object.keys(event).filter((key: string) => {
+    //     return event[key].actions?.length;
+    //   });
+    //   let dialogAction: any[] = [];
+    //   eventKeys.forEach(key => {
+    //     let actions = event[key].actions;
+    //     actions.forEach((action: any) => {
+    //       if (
+    //         action.actionType === 'dialog' ||
+    //         action.actionType === 'drawer' ||
+    //         action.actionType === 'confirmDialog'
+    //       ) {
+    //         dialogAction.push(action);
+    //       }
+    //     });
+    //   });
+    //   dialogAction.forEach(item => {
+    //     if (
+    //       item.actionType === 'dialog' ||
+    //       item.actionType === 'confirmDialog'
+    //     ) {
+    //       let dialogSchema = item.dialog || item.args;
+    //       let dialogProps = {
+    //         ...theme.getRendererConfig(this.dialogRenderer!.name),
+    //         ...dialogSchema,
+    //         ...chainEvents(rest, dialogSchema),
+    //         propKey: dialogSchema.propKey,
+    //         $path: 'dialog',
+    //         $dialogType: 'dialog',
+    //         $schema: dialogSchema,
+    //         ref: this.refFn,
+    //         render: this.renderChild,
+    //         rootStore,
+    //         statusStore,
+    //         dispatchEvent: this.dispatchEvent
+    //       };
+    //       dialogPropsList.push(dialogProps);
+    //     } else if (item.actionType === 'drawer') {
+    //       let drawerSchema = item.drawer;
+    //       let drawerProps = {
+    //         ...theme.getRendererConfig(this.drawerRenderer!.name),
+    //         ...drawerSchema,
+    //         ...chainEvents(rest, drawerSchema),
+    //         propKey: drawerSchema.propKey,
+    //         $path: 'drawer',
+    //         $dialogType: 'drawer',
+    //         $schema: drawerSchema,
+    //         ref: this.refFn,
+    //         render: this.renderChild,
+    //         rootStore,
+    //         statusStore,
+    //         dispatchEvent: this.dispatchEvent
+    //       };
+    //       dialogPropsList.push(drawerProps);
+    //     }
+    //   });
+    // }
+    // // 查找页面的弹窗视图
+    // if (
+    //   schema.type === 'page' &&
+    //   schema.dialogView &&
+    //   schema.dialogView.dialogType
+    // ) {
+    //   let cloneSchema = cloneDeep(schema);
+    //   delete cloneSchema.dialogView;
+
+    //   let newSchema = this.props.env.JSONPipeIn(
+    //     this.props.env.JSONPipeOut!(cloneSchema)
+    //   );
+
+    //   let dialogSchema = {
+    //     type: schema.dialogView.dialogType,
+    //     ...schema.dialogView,
+    //     body: newSchema
+    //   };
+    //   const rendererResolver =
+    //     this.props.env.rendererResolver || resolveRenderer;
+    //   const renderer = rendererResolver(
+    //     schema.dialogView.dialogType,
+    //     dialogSchema,
+    //     this.props,
+    //     true
+    //   );
+    //   schema.dialogView.dialogType === 'dialog'
+    //     ? (this.dialogRenderer = renderer)
+    //     : (this.drawerRenderer = renderer);
+    //   let dialogProps = {
+    //     ...theme.getRendererConfig(renderer!.name),
+    //     ...dialogSchema,
+    //     ...chainEvents(rest, dialogSchema),
+    //     propKey: dialogSchema.propKey,
+    //     $dialogType: schema.dialogView.dialogType,
+    //     $path: `dialogView/${schema.dialogView.dialogType}`,
+    //     $schema: dialogSchema,
+    //     ref: this.refFn,
+    //     render: this.renderChild,
+    //     rootStore,
+    //     statusStore,
+    //     dispatchEvent: this.dispatchEvent
+    //   };
+    //   dialogPropsList.push(dialogProps);
+    // }
+
     if (schema.children) {
       return rest.invisible
         ? null
@@ -482,7 +634,46 @@ export class SchemaRenderer extends React.Component<SchemaRendererProps, any> {
     return this.props.env.enableAMISDebug ? (
       <DebugWrapper renderer={renderer}>{component}</DebugWrapper>
     ) : (
-      component
+      <>
+        {component}
+        {/* 编辑态渲染隐藏的弹窗 */}
+        {/* {editable && dialogPropsList.length
+          ? dialogPropsList.map((props, index) => {
+              const renderer: RendererConfig =
+                props.$dialogType === 'dialog'
+                  ? this.dialogRenderer!
+                  : this.drawerRenderer!;
+              const Component = renderer.component;
+              if (props.$path.includes('dialogView')) {
+                let style = {
+                  ...props.style,
+                  display: dialogViewActiveId ? 'block' : 'none'
+                };
+                return (
+                  <Component
+                    key={index}
+                    {...props}
+                    style={style}
+                    ref={this.childRef}
+                  />
+                );
+              } else {
+                let style = {
+                  ...props.style,
+                  display: activeDialogId === props.$$id ? 'block' : 'none'
+                };
+                return (
+                  <Component
+                    key={index}
+                    {...props}
+                    style={style}
+                    ref={this.childRef}
+                  />
+                );
+              }
+            })
+          : null} */}
+      </>
     );
   }
 }

@@ -24,7 +24,8 @@ export class DrawerPlugin extends BasePlugin {
     wrapperComponent: InlineModal,
     onClose: noop,
     resizable: false,
-    show: true
+    show: true,
+    inDesign: true
   };
 
   regions: Array<RegionConfig> = [
@@ -122,6 +123,47 @@ export class DrawerPlugin extends BasePlugin {
                 type: 'input-text',
                 name: 'title'
               },
+              getSchemaTpl('switch', {
+                name: 'overlay',
+                label: '显示蒙层',
+                pipeIn: defaultValue(true)
+              }),
+              getSchemaTpl('switch', {
+                name: 'showCloseButton',
+                label: '展示关闭按钮',
+                pipeIn: defaultValue(true)
+              }),
+              getSchemaTpl('switch', {
+                name: 'closeOnOutside',
+                label: '点击遮罩关闭'
+              }),
+              getSchemaTpl('switch', {
+                label: '可按 Esc 关闭',
+                name: 'closeOnEsc'
+              }),
+              {
+                type: 'ae-StatusControl',
+                label: '隐藏按钮区',
+                mode: 'normal',
+                name: 'hideActions',
+                expressionName: 'hideActionsOn'
+              },
+              getSchemaTpl('switch', {
+                name: 'resizable',
+                label: '可拖拽抽屉大小',
+                value: false
+              }),
+              getSchemaTpl('dataMap')
+            ]
+          }
+        ])
+      },
+      {
+        title: '外观',
+        body: getSchemaTpl('collapseGroup', [
+          {
+            title: '基本',
+            body: [
               {
                 type: 'button-group-select',
                 name: 'position',
@@ -160,45 +202,11 @@ export class DrawerPlugin extends BasePlugin {
                   }
                 }
               },
-              getSchemaTpl('switch', {
-                name: 'overlay',
-                label: '显示蒙层',
-                pipeIn: defaultValue(true)
-              }),
-              getSchemaTpl('switch', {
-                name: 'showCloseButton',
-                label: '展示关闭按钮',
-                pipeIn: defaultValue(true)
-              }),
-              getSchemaTpl('switch', {
-                name: 'closeOnOutside',
-                label: '点击外部关闭'
-              }),
-              getSchemaTpl('switch', {
-                label: '可按 Esc 关闭',
-                name: 'closeOnEsc'
-              }),
-              getSchemaTpl('switch', {
-                name: 'resizable',
-                label: '可拖拽抽屉大小',
-                value: false
-              }),
-              getSchemaTpl('dataMap')
-            ]
-          }
-        ])
-      },
-      {
-        title: '外观',
-        body: getSchemaTpl('collapseGroup', [
-          {
-            title: '基本',
-            body: [
               {
                 type: 'button-group-select',
                 name: 'size',
                 label: '尺寸',
-                size: 'sm',
+                size: 'xs',
                 mode: 'horizontal',
                 options: [
                   {
@@ -231,7 +239,7 @@ export class DrawerPlugin extends BasePlugin {
                     '宽度',
                     '位置为 "左" 或 "右" 时生效。 默认宽度为"尺寸"字段配置的宽度，值单位默认为 px，也支持百分比等单位 ，如：100%'
                   ),
-                  disabledOn:
+                  visibleOn:
                     'this.position === "top" || this.position === "bottom"'
                 },
                 heightSchema: {
@@ -239,9 +247,52 @@ export class DrawerPlugin extends BasePlugin {
                     '高度',
                     '位置为 "上" 或 "下" 时生效。 默认宽度为"尺寸"字段配置的高度，值单位默认为 px，也支持百分比等单位 ，如：100%'
                   ),
-                  disabledOn:
+                  visibleOn:
                     'this.position === "left" || this.position === "right" || !this.position'
                 }
+              })
+            ]
+          },
+          {
+            title: '标题区',
+            body: [
+              getSchemaTpl('theme:select', {
+                label: '高度',
+                name: 'themeCss.drawerHeaderClassName.height'
+              }),
+              getSchemaTpl('theme:font', {
+                label: '文字',
+                name: 'themeCss.drawerTitleClassName.font'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.drawerHeaderClassName.padding-and-margin',
+                label: '间距'
+              })
+            ]
+          },
+          {
+            title: '内容区',
+            body: [
+              getSchemaTpl('theme:font', {
+                label: '文字',
+                name: 'themeCss.drawerBodyClassName.font'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.drawerBodyClassName.padding-and-margin',
+                label: '间距'
+              })
+            ]
+          },
+          {
+            title: '底部区',
+            body: [
+              getSchemaTpl('theme:select', {
+                label: '高度',
+                name: 'themeCss.drawerFooterClassName.height'
+              }),
+              getSchemaTpl('theme:paddingAndMargin', {
+                name: 'themeCss.drawerFooterClassName.padding-and-margin',
+                label: '间距'
               })
             ]
           },
@@ -263,6 +314,17 @@ export class DrawerPlugin extends BasePlugin {
                 label: '页脚区域',
                 name: 'footClassName'
               })
+            ]
+          },
+          {
+            title: '遮罩',
+            body: [
+              {
+                label: '遮罩颜色',
+                name: 'maskColor',
+                type: 'input-color',
+                clearable: true
+              }
             ]
           }
         ])

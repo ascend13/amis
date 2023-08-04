@@ -1194,6 +1194,16 @@ setSchemaTpl('app-page', {
   options: []
 });
 
+setSchemaTpl('app-pop-page', {
+  type: 'nested-select',
+  label: '选择页面',
+  name: 'link',
+  mode: 'horizontal',
+  size: 'lg',
+  required: true,
+  options: []
+});
+
 setSchemaTpl('app-page-args', {
   type: 'combo',
   name: 'params',

@@ -1,7 +1,15 @@
-import {render, toast, resolveRenderer, Modal, Icon, resizeSensor} from 'amis';
+import {
+  render,
+  toast,
+  resolveRenderer,
+  Modal,
+  Icon,
+  resizeSensor,
+  SchemaVariableList
+} from 'amis';
 import React, {Component} from 'react';
 import cx from 'classnames';
-import {autobind, guid, noop, reactionWithOldValue} from '../util';
+import {autobind, reactionWithOldValue} from '../util';
 import {clearStoresCache, RenderOptions} from 'amis-core';
 import type {Schema} from 'amis';
 import {EditorStoreType} from '../store/editor';
@@ -16,6 +24,7 @@ import {isAlive} from 'mobx-state-tree';
 import {findTree} from 'amis-core';
 import BackTop from './base/BackTop';
 import {RendererConfig} from 'amis-core';
+import {reaction} from 'mobx';
 
 export interface PreviewProps {
   // isEditorEnabled?: (
@@ -37,7 +46,6 @@ export interface PreviewProps {
   data?: any;
   iframeUrl?: string;
   autoFocus?: boolean;
-
   toolbarContainer?: () => any;
 }
 
@@ -72,7 +80,7 @@ export default class Preview extends Component<PreviewProps> {
 
     this.currentDom.addEventListener('mouseleave', this.handleMouseLeave);
     this.currentDom.addEventListener('mousemove', this.handleMouseMove);
-    this.currentDom.addEventListener('click', this.handleClick);
+    this.currentDom.addEventListener('click', this.handleClick, true);
     this.currentDom.addEventListener('mouseover', this.handeMouseOver);
 
     this.currentDom.addEventListener('mousedown', this.handeMouseDown);
@@ -427,7 +435,12 @@ export default class Preview extends Component<PreviewProps> {
     }
   }
 
-  rendererResolver(path: string, schema: Schema, props: any) {
+  rendererResolver(
+    path: string,
+    schema: Schema,
+    props: any,
+    isDialog?: boolean
+  ) {
     const {editable, manager} = this.props;
 
     let renderer: RendererConfig = resolveRenderer(path, schema)!;
@@ -520,22 +533,24 @@ export default class Preview extends Component<PreviewProps> {
                 autoFocus={autoFocus}
               ></IFrameBridge>
             ) : (
-              <SmartPreview
-                {...rest}
-                editable={editable}
-                autoFocus={autoFocus}
-                store={store}
-                env={env}
-                manager={manager}
-                key="pc"
-                appLocale={appLocale}
-              />
+              // 弹框挂载节点
+              <div className="dialog-preview-mount-node">
+                <SmartPreview
+                  {...rest}
+                  editable={editable}
+                  autoFocus={autoFocus}
+                  store={store}
+                  env={env}
+                  manager={manager}
+                  key="pc"
+                  appLocale={appLocale}
+                />
+              </div>
             )}
 
             {iframeUrl && isMobile && store.contextId ? (
               <span className="ae-IframeMask"></span>
             ) : null}
-
             <div className="ae-Preview-widgets" id="aePreviewHighlightBox">
               {store.highlightNodes.map(node => (
                 <HighlightBox
@@ -601,6 +616,10 @@ export interface SmartPreviewProps {
 }
 @observer
 class SmartPreview extends React.Component<SmartPreviewProps> {
+  dialogReaction: any;
+  dialogViewReaction: any;
+  dialogViewChildrenReaction: any;
+
   componentDidMount() {
     const store = this.props.store;
 
@@ -620,10 +639,78 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
     } else {
       this.props.manager.buildRenderersAndPanels();
     }
+
+    this.dialogReaction = reaction(
+      () => store.root.dialogChildren?.length,
+      length => {
+        if (length) {
+          store.changeOutlineTabsKey('dialog-outline');
+          store.setActiveId(store.previewDialogId);
+        } else {
+          store.setActiveId(store.getRootId());
+        }
+      }
+    );
+    this.dialogViewReaction = reaction(
+      () => store.dialogViewType && store.schema.dialogView?.type,
+      flag => {
+        if (flag) {
+          console.log('flag', flag);
+          const pageSchema = store.schema;
+          const dialogView = store.schema.dialogView;
+          const {title, className, showCloseButton, showErrorMsg, showLoading} =
+            dialogView;
+          let newDialogView = {};
+          if (store.dialogViewType === 'dialog') {
+            newDialogView = {
+              ...dialogView,
+              type: store.dialogViewType,
+              title: title ? title : pageSchema.title,
+              body: pageSchema.body,
+              showCloseButton: showCloseButton ? showCloseButton : true,
+              showErrorMsg: showErrorMsg ? showErrorMsg : true,
+              showLoading: showLoading ? showLoading : true,
+              className: className ? className : 'app-popover'
+            };
+          } else if (store.dialogViewType === 'drawer') {
+            newDialogView = {
+              ...dialogView,
+              type: store.dialogViewType,
+              title: title ? title : pageSchema.title,
+              body: pageSchema.body,
+              className: className ? className : 'app-popover'
+            };
+          }
+          const newSchema = {
+            ...store.schema,
+            dialogView: newDialogView
+          };
+          store.setSchema(newSchema);
+        }
+      }
+    );
+    this.dialogViewChildrenReaction = reaction(
+      () => store.root.dialogViewChildren?.length,
+      length => {
+        if (length) {
+          store.changeOutlineTabsKey('dialog-outline');
+          store.setActiveId(store.schema.dialogView.$$id);
+        } else {
+          store.setActiveId(store.getRootId());
+        }
+      }
+    );
+  }
+
+  componentWillUnmount() {
+    this.dialogReaction?.();
+    this.dialogViewReaction?.();
+    this.dialogViewChildrenReaction?.();
   }
 
   componentDidUpdate(prevProps: SmartPreviewProps) {
     const props = this.props;
+    const store = props.store;
 
     if (props.editable !== prevProps.editable) {
       if (props.editable) {
@@ -632,6 +719,13 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
           data: this.props.manager
         });
       }
+    }
+    if (store.activeDialogPath) {
+      let activeId = store.getSchemaByPath(
+        store.activeDialogPath.split('/')
+      ).$$id;
+      store.setPreviewDialogId(activeId);
+      store.setActiveDialogPath('');
     }
   }
 

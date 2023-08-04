@@ -25,7 +25,8 @@ export const iRendererStore = StoreNode.named('iRendererStore')
     dialogOpen: false,
     dialogData: types.optional(types.frozen(), undefined),
     drawerOpen: false,
-    drawerData: types.optional(types.frozen(), undefined)
+    drawerData: types.optional(types.frozen(), undefined),
+    popPageData: types.optional(types.frozen(), undefined) // 弹出页面动作所需的弹窗数据
   })
   .views(self => ({
     getValueByName(name: string, canAccessSuper: boolean = true) {

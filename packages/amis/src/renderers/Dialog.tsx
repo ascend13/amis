@@ -1,5 +1,12 @@
 import React from 'react';
-import {ScopedContext, IScopedContext, filterTarget} from 'amis-core';
+import {
+  ScopedContext,
+  IScopedContext,
+  filterTarget,
+  isPureVariable,
+  resolveVariableAndFilter,
+  CustomStyle
+} from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
 import {filter} from 'amis-core';
@@ -480,8 +487,14 @@ export default class Dialog extends React.Component<DialogProps> {
 
   renderFooter() {
     const actions = this.buildActions();
+    let {hideActions, hideActionsOn, data} = this.props;
 
-    if (!actions || !actions.length) {
+    if (isPureVariable(hideActionsOn)) {
+      hideActionsOn = resolveVariableAndFilter(hideActionsOn, data);
+    }
+    let isHidden = hideActions || hideActionsOn;
+
+    if (!actions || !actions.length || isHidden) {
       return null;
     }
 
@@ -491,11 +504,12 @@ export default class Dialog extends React.Component<DialogProps> {
       classnames: cx,
       showErrorMsg,
       showLoading,
-      show
+      show,
+      dialogFooterClassName
     } = this.props;
 
     return (
-      <div className={cx('Modal-footer')}>
+      <div className={cx('Modal-footer', dialogFooterClassName)}>
         {(showLoading !== false && store.loading) ||
         (showErrorMsg !== false && store.error) ? (
           <div className={cx('Dialog-info')} key="info">
@@ -550,13 +564,33 @@ export default class Dialog extends React.Component<DialogProps> {
       cancelText,
       confirmText,
       confirmBtnLevel,
-      cancelBtnLevel
+      cancelBtnLevel,
+      inDesign,
+      maskColor,
+      themeCss,
+      css,
+      id,
+      dialogHeaderClassName,
+      dialogTitleClassName,
+      dialogBodyClassName,
+      dialogFooterClassName
     } = {
       ...this.props,
       ...store.schema
     } as DialogProps;
 
-    const Wrapper = wrapperComponent || Modal;
+    // 设计态下挂在在画布下
+    const Wrapper = inDesign ? Modal : wrapperComponent || Modal;
+    let previewContainer = document.getElementsByClassName(
+      'dialog-preview-mount-node'
+    )[0];
+
+    let container = inDesign
+      ? previewContainer
+      : env && env.getModalContainer
+      ? env.getModalContainer
+      : undefined;
+
     return (
       <Wrapper
         classPrefix={classPrefix}
@@ -565,6 +599,8 @@ export default class Dialog extends React.Component<DialogProps> {
         size={size}
         height={height}
         width={width}
+        display={style && style.display}
+        maskColor={maskColor}
         backdrop="static"
         onHide={this.handleSelfClose}
         keyboard={closeOnEsc && !store.loading}
@@ -573,9 +609,7 @@ export default class Dialog extends React.Component<DialogProps> {
         show={show}
         onEntered={this.handleEntered}
         onExited={this.handleExited}
-        container={
-          env && env.getModalContainer ? env.getModalContainer : undefined
-        }
+        container={container}
         enforceFocus={false}
         disabled={store.loading}
         overlay={overlay}
@@ -586,7 +620,13 @@ export default class Dialog extends React.Component<DialogProps> {
         cancelBtnLevel={cancelBtnLevel}
       >
         {title && typeof title === 'string' ? (
-          <div className={cx('Modal-header', headerClassName)}>
+          <div
+            className={cx(
+              'Modal-header',
+              headerClassName,
+              dialogHeaderClassName
+            )}
+          >
             {showCloseButton !== false && !store.loading ? (
               <a
                 data-tooltip={__('Dialog.close')}
@@ -601,12 +641,18 @@ export default class Dialog extends React.Component<DialogProps> {
                 />
               </a>
             ) : null}
-            <div className={cx('Modal-title')}>
+            <div className={cx('Modal-title', dialogTitleClassName)}>
               {filter(__(title), store.formData)}
             </div>
           </div>
         ) : title ? (
-          <div className={cx('Modal-header', headerClassName)}>
+          <div
+            className={cx(
+              'Modal-header',
+              headerClassName,
+              dialogHeaderClassName
+            )}
+          >
             {showCloseButton !== false && !store.loading ? (
               <a
                 data-tooltip={__('Dialog.close')}
@@ -643,13 +689,44 @@ export default class Dialog extends React.Component<DialogProps> {
           : null}
 
         {(!store.entered && lazyRender) || (lazySchema && !body) ? (
-          <div className={cx('Modal-body', bodyClassName)} role="dialog-body">
+          <div
+            className={cx('Modal-body', bodyClassName, dialogBodyClassName)}
+            role="dialog-body"
+          >
             <Spinner overlay show size="lg" loadingConfig={loadingConfig} />
           </div>
         ) : body ? (
           // dialog-body 用于在 editor 中定位元素
-          <div className={cx('Modal-body', bodyClassName)} role="dialog-body">
+          <div
+            className={cx('Modal-body', bodyClassName, dialogBodyClassName)}
+            role="dialog-body"
+          >
             {this.renderBody(body, 'body')}
+            <CustomStyle
+              config={{
+                themeCss: themeCss || css,
+                classNames: [
+                  {
+                    key: 'dialogHeaderClassName',
+                    value: dialogHeaderClassName
+                  },
+                  {
+                    key: 'dialogTitleClassName',
+                    value: dialogTitleClassName
+                  },
+                  {
+                    key: 'dialogBodyClassName',
+                    value: dialogBodyClassName
+                  },
+                  {
+                    key: 'dialogFooterClassName',
+                    value: dialogFooterClassName
+                  }
+                ],
+                id: id
+              }}
+              env={env}
+            />
           </div>
         ) : null}
 
@@ -716,12 +793,11 @@ export class DialogRenderer extends Dialog {
 
   constructor(props: DialogProps, context: IScopedContext) {
     super(props);
-
     const scoped = context;
     scoped.registerComponent(this);
   }
 
-  componentWillUnmount() {
+  async componentWillUnmount() {
     const scoped = this.context as IScopedContext;
     scoped.unRegisterComponent(this);
     super.componentWillUnmount();

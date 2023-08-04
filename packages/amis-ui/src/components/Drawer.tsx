@@ -38,9 +38,11 @@ export interface DrawerProps {
   classPrefix: string;
   resizable?: boolean;
   classnames: ClassNamesFn;
+  display?: any;
   children?: React.ReactNode | Array<React.ReactNode>;
   onExited?: () => void;
   onEntered?: () => void;
+  maskColor?: string;
 }
 export interface DrawerState {}
 const fadeStyles: {
@@ -308,7 +310,9 @@ export class Drawer extends React.Component<DrawerProps, DrawerState> {
       disabled,
       overlay,
       bodyClassName,
-      resizable
+      resizable,
+      display,
+      maskColor
     } = this.props;
 
     const bodyStyle = this.getDrawerStyle();
@@ -346,11 +350,13 @@ export class Drawer extends React.Component<DrawerProps, DrawerState> {
                   },
                   className
                 )}
+                style={{display}}
                 // onClick={this.handleWidgetClick} // 其实不需要插件，直接写逻辑吧
               >
                 {overlay ? (
                   <div
                     className={cx(`${ns}Drawer-overlay`, fadeStyles[status])}
+                    style={{backgroundColor: maskColor}}
                   />
                 ) : null}
                 <div

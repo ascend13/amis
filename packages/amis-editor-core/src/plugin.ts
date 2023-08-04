@@ -291,6 +291,8 @@ export interface RendererInfo extends RendererScaffoldInfo {
   memberIndex?: number;
 
   tipName?: string;
+
+  dialogTitle?: string; //弹窗标题用于弹窗大纲的展示
 }
 
 export type BasicRendererInfo = Omit<

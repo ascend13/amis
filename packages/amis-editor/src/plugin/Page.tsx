@@ -1,4 +1,4 @@
-import {ContainerWrapper} from 'amis-editor-core';
+import {ContainerWrapper, isObject} from 'amis-editor-core';
 import {registerEditorPlugin} from 'amis-editor-core';
 import {
   BaseEventContext,
@@ -8,7 +8,7 @@ import {
 } from 'amis-editor-core';
 import {getEventControlConfig} from '../renderer/event-control/helper';
 import {RendererPluginAction, RendererPluginEvent} from 'amis-editor-core';
-import type {SchemaObject} from 'amis';
+import {Button, type SchemaObject} from 'amis';
 import {tipedLabel} from 'amis-editor-core';
 import {jsonToJsonSchema, EditorNodeType} from 'amis-editor-core';
 
@@ -173,6 +173,75 @@ export class PagePlugin extends BasePlugin {
                     hiddenOn:
                       'data.regions && !data.regions.includes("header") || !data.title'
                   }),
+                  [
+                    {
+                      type: 'ae-switch-more',
+                      mode: 'normal',
+                      name: 'dialogView',
+                      label: '弹窗视图',
+                      formType: 'extend',
+                      autoFocus: false,
+                      form: {
+                        body: [
+                          {
+                            type: 'radios',
+                            name: 'dialogView.type',
+                            mode: 'horizontal',
+                            labelAlign: 'right',
+                            label: '弹窗类型',
+                            itemClassName: 'p-r',
+                            options: [
+                              {
+                                label: '弹框',
+                                value: 'dialog'
+                              },
+                              {
+                                label: '抽屉',
+                                value: 'drawer'
+                              }
+                            ],
+                            onChange: (
+                              value: string,
+                              oldValue: any,
+                              model: any,
+                              form: any
+                            ) => {
+                              if (!form.data.dialogView.type) {
+                                form.setValueByName('dialogView.type', value);
+                                const editorStore = (window as any).editorStore;
+                                editorStore.setDialogViewType(value);
+                              }
+                            }
+                          },
+                          {
+                            type: 'button-group-select',
+                            visibleOn: 'data.dialogView.type',
+                            name: '__edit',
+                            label: '',
+                            options: [
+                              {
+                                label: '进入编辑',
+                                value: 'edit'
+                              }
+                            ],
+                            btnLevel: 'link',
+                            btnActiveLevel: 'link',
+                            onChange: (
+                              value: any,
+                              oldValue: any,
+                              model: any,
+                              form: any
+                            ) => {
+                              const editorStore = (window as any).editorStore;
+                              editorStore.setDialogViewType(
+                                form.data.dialogView.type
+                              );
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
                   {
                     type: 'ae-Switch-More',
                     name: 'asideResizor',

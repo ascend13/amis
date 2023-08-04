@@ -63,7 +63,11 @@ interface EventControlProps extends FormControlProps {
       rawVariables: ContextVariables[]; // 绑定事件的组件上下文
     }
   ) => ActionConfig; // 动作配置初始化时格式化
-  actionConfigSubmitFormatter?: (actionConfig: ActionConfig) => ActionConfig; // 动作配置提交时格式化
+  actionConfigSubmitFormatter?: (
+    actionConfig: ActionConfig,
+    type?: string,
+    actionData?: ActionData
+  ) => ActionConfig; // 动作配置提交时格式化
   owner?: string; // 组件标识
 }
 
@@ -78,6 +82,24 @@ interface EventDialogData {
   [propName: string]: any;
 }
 
+export interface ActionData {
+  eventKey: string;
+  actionIndex?: number;
+  action?: ActionConfig;
+  variables?: ContextVariables[];
+  pluginActions: PluginActions;
+  getContextSchemas?: (id?: string, withoutSuper?: boolean) => DataSchema;
+  rawVariables: ContextVariables[];
+  groupType?: string;
+  __actionDesc?: string;
+  __cmptTreeSource?: ComponentInfo[];
+  __superCmptTreeSource?: ComponentInfo[];
+  __actionSchema?: any;
+  __subActions?: SubRendererPluginAction[];
+  __setValueDs?: any[];
+  [propName: string]: any;
+}
+
 interface EventControlState {
   onEvent: ActionEventConfig;
   events: RendererPluginEvent[];
@@ -87,24 +109,7 @@ interface EventControlState {
   showAcionDialog: boolean;
   showEventDialog: boolean;
   eventDialogData?: EventDialogData;
-  actionData:
-    | {
-        eventKey: string;
-        actionIndex?: number;
-        action?: ActionConfig;
-        variables?: ContextVariables[];
-        pluginActions: PluginActions;
-        getContextSchemas?: (id?: string, withoutSuper?: boolean) => DataSchema;
-        rawVariables: ContextVariables[];
-        groupType?: string;
-        __actionDesc?: string;
-        __cmptTreeSource?: ComponentInfo[];
-        __superCmptTreeSource?: ComponentInfo[];
-        __actionSchema?: any;
-        __subActions?: SubRendererPluginAction[];
-        __setValueDs?: any[];
-      }
-    | undefined;
+  actionData: ActionData | undefined;
   type: 'update' | 'add';
   appLocaleState?: number;
 }
@@ -495,7 +500,7 @@ export class EventControl extends React.Component<
 
   destroyDragging() {
     Object.keys(this.eventPanelSortMap).forEach((key: string) => {
-      this.eventPanelSortMap[key]?.destroy();
+      this.eventPanelSortMap[key]?.el && this.eventPanelSortMap[key]?.destroy();
     });
   }
 
@@ -664,6 +669,35 @@ export class EventControl extends React.Component<
         __setValueDs: setValueDs
         // broadcastId: action.actionType === 'broadcast' ? action.eventName : ''
       };
+
+      // 编辑时准备已选的弹窗来源和标题
+      if (actionConfig?.actionType == 'openDialog') {
+        const dialogActionType = data.actionData.groupType;
+        const definitions = manager.store.schema.definitions;
+
+        const dialogObjMap = new Map([
+          ['dialog', 'dialog'],
+          ['drawer', 'drawer'],
+          ['confirmDialog', 'args']
+        ]);
+        const dialogObj = dialogObjMap.get(dialogActionType!);
+
+        const dialogRef = actionConfig?.[dialogObj!]?.$ref;
+
+        if (dialogRef) {
+          data.actionData.__dialogTitle = definitions[dialogRef].title;
+        } else {
+          data.actionData.__dialogTitle = actionConfig?.[dialogObj!]?.title;
+        }
+
+        if (actionConfig.args?.formCurrentDialog) {
+          data.actionData.__dialogSource = 'current';
+          data.actionData.__selectDialog = definitions[dialogRef];
+        } else {
+          data.actionData.__dialogSource = 'new';
+        }
+      }
+
       // 选中项自动滚动至可见位置
       setTimeout(
         () =>
@@ -729,13 +763,108 @@ export class EventControl extends React.Component<
 
   @autobind
   onSubmit(type: string, config: any) {
-    const {actionConfigSubmitFormatter} = this.props;
-    const action = actionConfigSubmitFormatter?.(config) ?? config;
+    const {actionConfigSubmitFormatter, manager} = this.props;
+    const {actionData} = this.state;
+    const store = manager.store;
+    const action =
+      actionConfigSubmitFormatter?.(config, type, actionData) ?? config;
     delete action.__actionSchema;
     if (type === 'add') {
-      this.addAction?.(config.eventKey, action);
+      if (
+        action.actionType === 'dialog' ||
+        action.actionType === 'drawer' ||
+        action.actionType === 'confirmDialog'
+      ) {
+        let args =
+          action.actionType === 'dialog'
+            ? 'dialog'
+            : action.actionType === 'drawer'
+            ? 'drawer'
+            : 'args';
+
+        this.addAction?.(config.eventKey, action);
+
+        if (config.__dialogSource === 'new') {
+          let actionLength = this.state.onEvent[config.eventKey].actions.length;
+          let path = `${store.getSchemaPath(store.activeId)}/onEvent/${
+            config.eventKey
+          }/actions/${actionLength}/${args}`;
+          store.setActiveDialogPath(path);
+        } else if (config.__dialogSource === 'current') {
+          let definitions = store.schema.definitions;
+          let dialogIndexList = [];
+          let dialogRefsName = '';
+          if (definitions) {
+            for (let k in definitions) {
+              if (k.includes('dialog-')) {
+                const dialog = definitions[k];
+                if (dialog.$$id === action[action.actionType].$$id) {
+                  dialogRefsName = k;
+                }
+                let index = Number(k.split('-')[1]);
+                dialogIndexList.push(index);
+              }
+            }
+            dialogIndexList.sort((a: number, b: number) => b - a);
+          }
+          if (!dialogRefsName) {
+            dialogRefsName = dialogIndexList[0]
+              ? `dialog-${dialogIndexList[0] + 1}`
+              : 'dialog-1';
+          }
+          let path = `definitions/${dialogRefsName}`;
+          store.setActiveDialogPath(path);
+        }
+      } else {
+        this.addAction?.(config.eventKey, action);
+      }
     } else if (type === 'update') {
-      this.updateAction?.(config.eventKey, config.actionIndex, action);
+      if (
+        action.actionType === 'dialog' ||
+        action.actionType === 'drawer' ||
+        action.actionType === 'confirmDialog'
+      ) {
+        let args =
+          action.actionType === 'dialog'
+            ? 'dialog'
+            : action.actionType === 'drawer'
+            ? 'drawer'
+            : 'args';
+        this.updateAction?.(config.eventKey, config.actionIndex, action);
+
+        if (config.__dialogSource === 'new') {
+          let path = `${store.getSchemaPath(store.activeId)}/onEvent/${
+            config.eventKey
+          }/actions/${config.actionIndex}/${args}`;
+          store.setActiveDialogPath(path);
+        } else if (config.__dialogSource === 'current') {
+          let definitions = store.schema.definitions;
+          let dialogIndexList = [];
+          let dialogRefsName = '';
+          if (definitions) {
+            for (let k in definitions) {
+              if (k.includes('dialog-')) {
+                const dialog = definitions[k];
+                if (dialog.$$id === action[action.actionType].$$id) {
+                  dialogRefsName = k;
+                }
+                let index = Number(k.split('-')[1]);
+                dialogIndexList.push(index);
+              }
+            }
+            dialogIndexList.sort((a: number, b: number) => b - a);
+          }
+          if (!dialogRefsName) {
+            dialogRefsName = dialogIndexList[0]
+              ? `dialog-${dialogIndexList[0] + 1}`
+              : 'dialog-1';
+          }
+          let path = `definitions/${dialogRefsName}`;
+          store.setActiveDialogPath(path);
+        }
+      } else {
+        this.updateAction?.(config.eventKey, config.actionIndex, action);
+      }
     }
 
     this.setState({showAcionDialog: false});
