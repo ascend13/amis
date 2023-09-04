@@ -50,7 +50,17 @@ export class RegionWrapper extends React.Component<RegionWrapperProps> {
       return;
     }
 
-    if (manager.store.previewDialogId) {
+    if (manager.store.dialogViewType) {
+      this.editorNode = this.parentNode.addDialogViewChild({
+        id: this.parentNode.id,
+        type: this.parentNode.type,
+        label: this.props.label,
+        path: `${this.parentNode.path}/${this.props.name}`,
+        region: this.props.name, // regions中的key值
+        regionInfo: this.props.regionConfig,
+        preferTag: this.props.preferTag
+      });
+    } else if (manager.store.previewDialogId) {
       this.editorNode = this.parentNode.addDialogChild({
         id: this.parentNode.id,
         type: this.parentNode.type,

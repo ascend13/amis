@@ -363,6 +363,7 @@ export class OutlinePanel extends React.Component<PanelProps> {
     const outlineTabsKey = store.outlineTabsKey || 'component-outline';
     const options = store.outline;
     const dialogOptions = this.getDialogOutline();
+    const dialogViewOptions = store.dialogViewOutline;
 
     return (
       <div className="ae-Outline-panel">
@@ -447,7 +448,17 @@ export class OutlinePanel extends React.Component<PanelProps> {
               onDragOver={this.handleDragOver}
               onDrop={this.handleDrop}
             >
-              {dialogOptions.length ? (
+              {store.dialogViewType ? (
+                dialogViewOptions.length ? (
+                  <ul className="ae-Outline-list">
+                    {dialogViewOptions.map((option, index) =>
+                      this.renderItem(option, index, 'dialogView')
+                    )}
+                  </ul>
+                ) : (
+                  <div>暂无数据</div>
+                )
+              ) : dialogOptions.length ? (
                 <ul className="ae-Outline-list">
                   {dialogOptions.map((option, index) =>
                     this.renderDialogItem(option, index)

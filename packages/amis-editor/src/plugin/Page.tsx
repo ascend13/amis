@@ -284,6 +284,32 @@ export class PagePlugin extends BasePlugin {
                     ]
                   }
                 ]
+              },
+              {
+                title: '弹出视图',
+                body: [
+                  {
+                    type: 'ae-pageViewControl',
+                    name: 'dialogView',
+                    mode: 'normal',
+                    asFormItem: true,
+                    onChange: (
+                      value: string,
+                      oldValue: any,
+                      model: any,
+                      form: any
+                    ) => {
+                      console.log('value', value);
+                      console.log('oldValue', oldValue);
+                      console.log('form', form);
+                      if (!form.data.dialogView?.type) {
+                        form.setValueByName('dialogView.type', value);
+                        const editorStore = (window as any).editorStore;
+                        editorStore.setDialogViewType(value);
+                      }
+                    }
+                  }
+                ]
               }
             ])
           ]

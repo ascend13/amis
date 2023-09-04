@@ -597,6 +597,8 @@ export interface SmartPreviewProps {
 @observer
 class SmartPreview extends React.Component<SmartPreviewProps> {
   dialogReaction: any;
+  dialogViewReaction: any;
+  dialogViewChildrenReaction: any;
 
   componentDidMount() {
     const store = this.props.store;
@@ -624,6 +626,57 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
         if (length) {
           store.changeOutlineTabsKey('dialog-outline');
           store.setActiveId(store.previewDialogId);
+        } else {
+          store.setActiveId(store.getRootId());
+        }
+      }
+    );
+
+    this.dialogViewReaction = reaction(
+      () => store.dialogViewType && store.schema.dialogView?.type,
+      flag => {
+        if (flag) {
+          console.log('flag', flag);
+          const pageSchema = store.schema;
+          const dialogView = store.schema.dialogView;
+          const {title, className, showCloseButton, showErrorMsg, showLoading} =
+            dialogView;
+          let newDialogView = {};
+          if (store.dialogViewType === 'dialog') {
+            newDialogView = {
+              ...dialogView,
+              type: store.dialogViewType,
+              title: title ? title : pageSchema.title,
+              body: pageSchema.body,
+              showCloseButton: showCloseButton ? showCloseButton : true,
+              showErrorMsg: showErrorMsg ? showErrorMsg : true,
+              showLoading: showLoading ? showLoading : true,
+              className: className ? className : 'app-popover'
+            };
+          } else if (store.dialogViewType === 'drawer') {
+            newDialogView = {
+              ...dialogView,
+              type: store.dialogViewType,
+              title: title ? title : pageSchema.title,
+              body: pageSchema.body,
+              className: className ? className : 'app-popover'
+            };
+          }
+          const newSchema = {
+            ...store.schema,
+            dialogView: newDialogView
+          };
+          store.setSchema(newSchema);
+        }
+      }
+    );
+
+    this.dialogViewChildrenReaction = reaction(
+      () => store.root.dialogViewChildren?.length,
+      length => {
+        if (length) {
+          store.changeOutlineTabsKey('dialog-outline');
+          store.setActiveId(store.schema.dialogView.$$id);
         } else {
           store.setActiveId(store.getRootId());
         }

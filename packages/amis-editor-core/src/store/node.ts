@@ -70,6 +70,11 @@ export const EditorNode = types
     dialogChildren: types.optional(
       types.array(types.late((): IAnyModelType => EditorNode)),
       []
+    ),
+
+    dialogViewChildren: types.optional(
+      types.array(types.late((): IAnyModelType => EditorNode)),
+      []
     )
   })
   .volatile(() => ({
@@ -216,7 +221,11 @@ export const EditorNode = types
       get childRegions() {
         const editor = getRoot(self) as EditorStoreType;
         let regions;
-        if (editor.previewDialogId) {
+        if (editor.dialogViewType) {
+          regions = this.uniqueDialogViewChildren.filter(
+            (item, index, list) => item.isRegion
+          );
+        } else if (editor.previewDialogId) {
           regions = this.uniqueDialogChildren.filter(
             (item, index, list) => item.isRegion
           );
@@ -280,9 +289,35 @@ export const EditorNode = types
         return children;
       },
 
+      get uniqueDialogViewChildren() {
+        let children = self.dialogViewChildren.filter(
+          (child, index, list) =>
+            list.findIndex(a =>
+              child.isRegion
+                ? a.id === child.id && a.region === child.region
+                : a.id === child.id
+            ) === index
+        );
+
+        if (Array.isArray(this.schema)) {
+          const arr = this.schema;
+          children = children.sort((a, b) => {
+            const idxa = findIndex(arr, item => item?.$$id === a.id);
+            const idxb = findIndex(arr, item => item?.$$id === b.id);
+            return idxa - idxb;
+          });
+        }
+
+        return children;
+      },
+
       get sameIdChild() {
         const editor = getRoot(self) as EditorStoreType;
-        if (editor.previewDialogId) {
+        if (editor.dialogViewType) {
+          return this.uniqueDialogViewChildren?.find(
+            child => !child.isRegion && child.id === self.id
+          );
+        } else if (editor.previewDialogId) {
           return this.uniqueDialogChildren?.find(
             child => !child.isRegion && child.id === self.id
           );
@@ -295,6 +330,12 @@ export const EditorNode = types
 
       get sameIdDialogChild() {
         return this.uniqueDialogChildren?.find(
+          child => !child.isRegion && child.id === self.id
+        );
+      },
+
+      get sameIdDialogViewChild() {
+        return this.uniqueDialogViewChildren?.find(
           child => !child.isRegion && child.id === self.id
         );
       },
@@ -663,6 +704,33 @@ export const EditorNode = types
           parentRegion: self.region
         });
         const node = self.children[self.children.length - 1];
+        node.setInfo(props.info);
+        return node;
+      },
+
+      addDialogViewChild(props: {
+        id: string;
+        type: string;
+        label: string;
+        path: string;
+        isCommonConfig?: boolean;
+        info?: RendererInfo;
+        region?: string;
+        getData?: () => any;
+        preferTag?: string;
+        schemaPath?: string;
+        regionInfo?: RegionConfig;
+        widthMutable?: boolean;
+        memberIndex?: number;
+        dialogTitle?: string;
+      }) {
+        self.dialogViewChildren.push({
+          ...props,
+          parentId: self.id,
+          parentRegion: self.region
+        });
+        const node =
+          self.dialogViewChildren[self.dialogViewChildren.length - 1];
         node.setInfo(props.info);
         return node;
       },

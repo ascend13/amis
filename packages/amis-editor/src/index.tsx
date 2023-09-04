@@ -40,6 +40,7 @@ import './renderer/TransferTableControl';
 import './renderer/style-control/ThemeCssCode';
 import './renderer/ButtonGroupControl';
 import './renderer/FlexSettingControl';
+import './renderer/PageViewControl';
 import 'amis-theme-editor/lib/locale/zh-CN';
 import 'amis-theme-editor/lib/locale/en-US';
 import 'amis-theme-editor/lib/renderers/Border';
