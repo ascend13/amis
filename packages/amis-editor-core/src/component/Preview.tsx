@@ -594,6 +594,7 @@ export interface SmartPreviewProps {
 @observer
 class SmartPreview extends React.Component<SmartPreviewProps> {
   dialogReaction: any;
+  dialogViewReaction: any;
   dialogMountRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   componentDidMount() {
@@ -618,7 +619,7 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
 
     // 添加弹窗事件或弹窗列表进行弹窗切换后自动选中对应的弹窗
     this.dialogReaction = reaction(
-      () => `${store.root.children[0].type}:${store.root.children[0].id}`,
+      () => `${store.root.children[0]?.type}:${store.root.children[0]?.id}`,
       info => {
         const type = info.split(':')[0];
         if (type === 'dialog' || type === 'drawer') {
@@ -631,10 +632,63 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
         }
       }
     );
+
+    // 进入页面弹窗视图准备对应的schema
+    this.dialogViewReaction = reaction(
+      () => store.dialogViewType && store.schema.dialogView?.dialogType,
+      flag => {
+        if (flag) {
+          const pageSchema = store.schema;
+          const dialogView = pageSchema.dialogView;
+          const {
+            title,
+            className,
+            showCloseButton,
+            showErrorMsg,
+            showLoading,
+            actions
+          } = dialogView;
+          let baseDialogView = {
+            ...dialogView,
+            type: store.dialogViewType,
+            title: title,
+            body: pageSchema.body,
+            actions: actions || [
+              {
+                type: 'button',
+                actionType: 'cancel',
+                label: '取消'
+              },
+              {
+                type: 'button',
+                actionType: 'confirm',
+                label: '确认',
+                primary: true
+              }
+            ],
+            className: className ? className : 'app-popover'
+          };
+          if (store.dialogViewType === 'dialog') {
+            baseDialogView = {
+              ...baseDialogView,
+              showCloseButton: showCloseButton ? showCloseButton : true,
+              showErrorMsg: showErrorMsg ? showErrorMsg : true,
+              showLoading: showLoading ? showLoading : true
+            };
+          }
+          const newSchema = {
+            ...store.schema,
+            dialogView: baseDialogView
+          };
+          store.setSchema(newSchema);
+        }
+      }
+    );
   }
 
   componentWillUnmount() {
     this.dialogReaction?.();
+    this.dialogViewReaction?.();
   }
 
   componentDidUpdate(prevProps: SmartPreviewProps) {

@@ -136,6 +136,7 @@ export const MainStore = types
     hoverRegion: '',
     activeId: '',
     previewDialogId: '', // 选择要进行编辑的弹窗id
+    dialogViewType: '', // 开启弹窗视图类型
     activeDialogPath: '', // 记录选中设计的弹窗path
     activeRegion: '', // 记录当前激活的子区域
     mouseMoveRegion: '', // 记录当前鼠标hover到的区域，后续需要优化（合并MouseMoveRegion和hoverRegion）
@@ -231,7 +232,14 @@ export const MainStore = types
       // 给编辑状态时的
       get filteredSchema() {
         let schema = self.schema;
-        if (self.previewDialogId) {
+        if (self.dialogViewType && schema.dialogView?.dialogType) {
+          const dialogView = schema.dialogView;
+          schema = {
+            type: dialogView.dialogType,
+            body: schema.body,
+            ...dialogView
+          };
+        } else if (self.previewDialogId) {
           schema = this.getSchema(self.previewDialogId);
         }
         return filterSchemaForEditor(
@@ -554,8 +562,45 @@ export const MainStore = types
           return undefined;
         }
 
+        let activeSchema = JSONGetById(self.schema, self.activeId);
+
+        //如果是页面弹窗视图，需要添加一些额外属性完善弹窗schema
+        /* if (self.dialogViewType && self.schema.dialogView?.dialogType) {
+          const dialogView = activeSchema;
+          const {
+            className,
+            showCloseButton,
+            showErrorMsg,
+            showLoading,
+            actions
+          } = dialogView;
+          activeSchema = {
+            ...dialogView,
+            type: self.dialogViewType,
+            title: self.schema.title,
+            body: self.schema.body,
+            showCloseButton: showCloseButton ? showCloseButton : true,
+            showErrorMsg: showErrorMsg ? showErrorMsg : true,
+            showLoading: showLoading ? showLoading : true,
+            actions: actions || [
+              {
+                type: 'button',
+                actionType: 'cancel',
+                label: '取消'
+              },
+              {
+                type: 'button',
+                actionType: 'confirm',
+                label: '确认',
+                primary: true
+              }
+            ],
+            className: className ? className : 'app-popover'
+          };
+        } */
+
         return JSONPipeOut(
-          JSONGetById(self.schema, self.activeId),
+          activeSchema,
           getEnv(self).isHiddenProps ||
             ((key, props) =>
               (key.substring(0, 2) === '$$' &&
@@ -1232,6 +1277,10 @@ export const MainStore = types
         // if (!self.panelKey && id) {
         //   self.panelKey = 'config';
         // }
+      },
+
+      setDialogViewType(type?: 'dialog' | 'drawer') {
+        self.dialogViewType = type ? type : '';
       },
 
       setActiveDialogPath(path: string) {

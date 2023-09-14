@@ -62,6 +62,7 @@ export class OutlinePanel extends React.Component<PanelProps> {
       store.changeOutlineTabsKey(key);
       if (key === 'component-outline') {
         store.setPreviewDialogId();
+        store.setDialogViewType();
       }
     }
   }
