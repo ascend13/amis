@@ -8,8 +8,14 @@ import {Icon, registerIcon} from 'amis';
 import PCPreview from './pc-preview.svg';
 // @ts-ignore
 import H5Preview from './h5-preview.svg';
+// @ts-ignore
+import DialogPreview from './dialog-preview.svg';
+// @ts-ignore
+import DrawerPreview from './drawer-preview.svg';
 registerIcon('pc-preview', PCPreview);
 registerIcon('h5-preview', H5Preview);
+registerIcon('dialog-preview', DialogPreview);
+registerIcon('drawer-preview', DrawerPreview);
 
 // @ts-ignore
 import CorpusI18n from './corpus-i18n.svg';

@@ -101,7 +101,7 @@ export default class IFramePreview extends React.Component<IFramePreviewProps> {
 
     return (
       <Frame
-        className={`ae-PreviewIFrame`}
+        className={`ae-PreviewIFrame mobile-device-screen`}
         initialContent={this.initialContent}
         ref={this.iframeRefFunc}
         contentDidMount={this.iframeContentDidMount}

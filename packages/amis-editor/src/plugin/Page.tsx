@@ -131,6 +131,7 @@ export class PagePlugin extends BasePlugin {
   panelJustify = true;
 
   panelBodyCreator = (context: BaseEventContext) => {
+    const store = this.manager.store;
     return [
       getSchemaTpl('tabs', [
         {
@@ -282,6 +283,32 @@ export class PagePlugin extends BasePlugin {
                         }
                       }
                     ]
+                  }
+                ]
+              },
+              {
+                title: '弹出视图',
+                body: [
+                  {
+                    type: 'ae-pageViewControl',
+                    name: 'dialogView.dialogType',
+                    mode: 'normal',
+                    asFormItem: true,
+                    onChange: (
+                      value: any,
+                      oldValue: any,
+                      model: any,
+                      form: any
+                    ) => {
+                      if (value === 'empty') {
+                        form.deleteValueByName('dialogView');
+                      } else {
+                        store.setDialogViewType(value);
+                      }
+                    },
+                    onEdit: (value: any) => {
+                      store.setDialogViewType(value);
+                    }
                   }
                 ]
               }

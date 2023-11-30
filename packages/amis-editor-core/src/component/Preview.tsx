@@ -49,6 +49,7 @@ export interface PreviewState {
 export default class Preview extends Component<PreviewProps> {
   currentDom: HTMLElement; // 用于记录当前dom元素
   dialogReaction: any;
+  dialogViewReaction: any;
   env: RenderOptions = {
     ...this.props.manager.env,
     notify: (type, msg, conf) => {
@@ -99,6 +100,58 @@ export default class Preview extends Component<PreviewProps> {
         }
       }
     );
+
+    // 进入页面弹窗视图准备对应的schema
+    this.dialogViewReaction = reaction(
+      () => store.dialogViewType && store.schema.dialogView?.dialogType,
+      flag => {
+        if (flag) {
+          const pageSchema = store.schema;
+          let dialogView = pageSchema.dialogView;
+          const {
+            title,
+            className,
+            showCloseButton,
+            showErrorMsg,
+            showLoading,
+            actions
+          } = dialogView;
+          let baseDialogView = {
+            ...dialogView,
+            type: store.dialogViewType,
+            title: title,
+            body: pageSchema.body,
+            actions: actions || [
+              {
+                type: 'button',
+                actionType: 'cancel',
+                label: '取消'
+              },
+              {
+                type: 'button',
+                actionType: 'confirm',
+                label: '确认',
+                primary: true
+              }
+            ],
+            className: className ? className : 'app-popover'
+          };
+          if (store.dialogViewType === 'dialog') {
+            baseDialogView = {
+              ...baseDialogView,
+              showCloseButton: showCloseButton ? showCloseButton : true,
+              showErrorMsg: showErrorMsg ? showErrorMsg : true,
+              showLoading: showLoading ? showLoading : true
+            };
+          }
+          const newSchema = {
+            ...store.schema,
+            dialogView: baseDialogView
+          };
+          store.setSchema(newSchema);
+        }
+      }
+    );
   }
 
   componentWillUnmount() {
@@ -110,6 +163,7 @@ export default class Preview extends Component<PreviewProps> {
       this.currentDom.removeEventListener('mousedown', this.handeMouseDown);
       this.props.manager.off('after-update', this.handlePanelChange);
       this.dialogReaction?.();
+      this.dialogViewReaction?.();
     }
 
     this.scrollLayer?.removeEventListener('scroll', this.handlePanelChange);
@@ -526,31 +580,44 @@ export default class Preview extends Component<PreviewProps> {
             'ae-Preview-body',
             className,
             editable ? 'is-edting' : '',
-            isMobile ? 'is-mobile' : 'is-pc hoverShowScrollBar'
+            isMobile ? 'is-mobile mobile-device' : 'is-pc hoverShowScrollBar'
           )}
           ref={this.contentsRef}
         >
           {isMobile && (
             <React.Fragment>
-              <div className="mobile-sound"></div>
+              <div className="mobile-device-stripe"></div>
+              <div className="mobile-device-header"></div>
+              <div className="mobile-device-sensors"></div>
+              <div className="mobile-device-btns"></div>
+              <div className="mobile-device-power"></div>
+              <div className="mobile-device-home"></div>
+              {/* <div className="mobile-sound"></div>
               <div className="mobile-receiver"></div>
               <div className="mobile-left-btn"></div>
               <div className="mobile-right-btn"></div>
-              <div className="mobile-open-btn"></div>
+              <div className="mobile-open-btn"></div> */}
             </React.Fragment>
           )}
-          <div className="ae-Preview-inner">
+          <div
+            className={`ae-Preview-inner ${
+              isMobile ? 'mobile-device-frame' : ''
+            }`}
+          >
             {isMobile ? (
-              <IFramePreview
-                {...rest}
-                key="mobile"
-                editable={editable}
-                store={store}
-                env={env}
-                manager={manager}
-                autoFocus={autoFocus}
-                appLocale={appLocale}
-              ></IFramePreview>
+              <>
+                <div className="mobile-device-bar"></div>
+                <IFramePreview
+                  {...rest}
+                  key="mobile"
+                  editable={editable}
+                  store={store}
+                  env={env}
+                  manager={manager}
+                  autoFocus={autoFocus}
+                  appLocale={appLocale}
+                ></IFramePreview>
+              </>
             ) : (
               <SmartPreview
                 {...rest}
@@ -670,6 +737,17 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
     return this.dialogMountRef.current;
   }
 
+  @autobind
+  getModalContainerForPreview() {
+    if (this.props.store.dialogViewType) {
+      return this.getDialogMountRef;
+    }
+    return this.props.env.getModalContainer;
+  }
+
+  @autobind
+  getModalContainer() {}
+
   render() {
     const {editable, store, appLocale, autoFocus, env, data, manager, ...rest} =
       this.props;
@@ -687,7 +765,7 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
             locale: appLocale,
             editorDialogMountNode: this.getDialogMountRef
           },
-          env
+          {...env, getModalContainer: this.getModalContainerForPreview()}
         )}
       </div>
     );

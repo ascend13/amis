@@ -9,6 +9,7 @@
 @import './outline';
 @import './leftPanel';
 @import './rightPanel';
+@import './mobile-divice';
 @import './bcn';
 @import './classname-picker';
 @import './renderers';
@@ -43,6 +44,7 @@
 @import './control/_flex-setting-control';
 @import './control/table-column-width-control.scss';
 @import './control/crud2-control';
+@import './control/page-view-control';
 
 /* 样式控件 */
 @import './style-control/box-model';
@@ -198,9 +200,9 @@
       position: relative;
       // display: flex;
       min-height: calc(100% - 40px);
-      background: #fff;
-      box-shadow: 0 2px 6px 0 rgba(211, 211, 211, 0.5);
-      border-radius: 4px;
+      // background: #fff;
+      // box-shadow: 0 2px 6px 0 rgba(211, 211, 211, 0.5);
+      // border-radius: 4px;
       transform: scale(1);
       transform-origin: center top;
       display: flex;
@@ -245,12 +247,12 @@
 
     &.is-mobile {
       position: relative;
-      border-width: 24px 22px 36px;
-      border-color: #ddd;
-      border-style: solid;
-      border-radius: 40px;
-      width: 419px;
-      height: 798px;
+      // border-width: 24px 22px 36px;
+      // border-color: #ddd;
+      // border-style: solid;
+      // border-radius: 40px;
+      // width: 419px;
+      // height: 798px;
       flex-grow: unset;
       min-height: unset;
       margin: 40px auto;
@@ -264,7 +266,7 @@
       }
 
       > .ae-Preview-inner {
-        background: transparent;
+        // background: transparent;
         overflow-x: hidden;
         overflow-y: auto;
         transform: scale(1);
@@ -277,64 +279,246 @@
           display: none;
         }
 
-        &::before {
-          content: '';
-          height: 40px;
-          position: sticky;
-          top: 0;
-          width: 100%;
-          background: #ddd;
-          flex-shrink: 0;
-          display: block;
-        }
+        // &::before {
+        //   content: '';
+        //   height: 40px;
+        //   position: sticky;
+        //   top: 0;
+        //   width: 100%;
+        //   background: #ddd;
+        //   flex-shrink: 0;
+        //   display: block;
+        // }
       }
 
       // 移动端预览设备装饰
-      .mobile-sound,
-      .mobile-receiver,
-      .mobile-left-btn,
-      .mobile-right-btn,
-      .mobile-open-btn {
+      // .mobile-sound,
+      // .mobile-receiver,
+      // .mobile-left-btn,
+      // .mobile-right-btn,
+      // .mobile-open-btn {
+      //   position: absolute;
+      //   background: #cdcdcd;
+      //   border-radius: 3px;
+      //   z-index: 100;
+      // }
+      // // 音响
+      // .mobile-sound {
+      //   top: 5px;
+      //   left: 142px; // 164px - 22px;
+      //   width: 58px;
+      //   height: 6px;
+      // }
+      // // 听筒
+      // .mobile-receiver {
+      //   top: 3px;
+      //   left: 224px; // 246px - 22px;
+      //   width: 10px;
+      //   height: 10px;
+      //   border-radius: 5px;
+      // }
+      // // 左侧按钮
+      // .mobile-left-btn {
+      //   top: 162px; // 226px - 64px;
+      //   left: -27px; // -5px - 22px;
+      //   width: 6px;
+      //   height: 50px;
+      // }
+      // // 右侧按钮（长条）
+      // .mobile-right-btn {
+      //   top: 61px; // 125px - 64px;
+      //   right: -27px;
+      //   width: 6px;
+      //   height: 100px;
+      // }
+      // // 开机键
+      // .mobile-open-btn {
+      //   top: 211px; // 275px - 64px;
+      //   right: -27px;
+      //   width: 6px;
+      //   height: 50px;
+      // }
+    }
+  }
+
+  .mobile-device {
+    height: 868px;
+    width: 428px;
+    &-frame {
+      background: $device-panel;
+      border: 1px solid $device-midnight-dark;
+      border-radius: 68px;
+      box-shadow: inset 0 0 4px 2px lighten($device-midnight, 55%),
+        inset 0 0 0 6px $device-midnight;
+      height: 868px;
+      padding: 19px;
+      width: 428px;
+    }
+    &-screen {
+      border-radius: 0 0 49px 49px;
+      height: 790px;
+      width: 390px;
+    }
+    &-bar {
+      width: 390px;
+      height: 40px;
+      border-radius: 49px 49px 0 0;
+      background-image: url('../static/device-status-bar.png');
+      background-color: white;
+      background-repeat: no-repeat;
+      background-size: 100%;
+    }
+    &-stripe {
+      &::after,
+      &::before {
+        border: solid rgba($device-panel, 0.25);
+        border-width: 0 7px;
+        content: '';
+        height: 7px;
+        left: 0;
         position: absolute;
-        background: #cdcdcd;
-        border-radius: 3px;
-        z-index: 100;
+        width: 100%;
+        z-index: 9;
       }
-      // 音响
-      .mobile-sound {
-        top: 5px;
-        left: 142px; // 164px - 22px;
-        width: 58px;
-        height: 6px;
+      &::after {
+        top: 85px;
       }
-      // 听筒
-      .mobile-receiver {
-        top: 3px;
-        left: 224px; // 246px - 22px;
-        width: 10px;
+      &::before {
+        bottom: 85px;
+      }
+    }
+    &-header {
+      background: $device-panel;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      height: 30px;
+      left: 50%;
+      margin-left: -80px;
+      position: absolute;
+      top: 20px;
+      width: 160px;
+
+      &::after,
+      &::before {
+        content: '';
         height: 10px;
-        border-radius: 5px;
+        position: absolute;
+        top: 0;
+        width: 10px;
       }
-      // 左侧按钮
-      .mobile-left-btn {
-        top: 162px; // 226px - 64px;
-        left: -27px; // -5px - 22px;
-        width: 6px;
-        height: 50px;
+      &::after {
+        background: radial-gradient(
+          circle at bottom left,
+          transparent 0,
+          transparent 75%,
+          $device-panel 75%,
+          $device-panel 100%
+        );
+        left: -10px;
       }
-      // 右侧按钮（长条）
-      .mobile-right-btn {
-        top: 61px; // 125px - 64px;
-        right: -27px;
-        width: 6px;
-        height: 100px;
+      &::before {
+        background: radial-gradient(
+          circle at bottom right,
+          transparent 0,
+          transparent 75%,
+          $device-panel 75%,
+          $device-panel 100%
+        );
+        right: -10px;
       }
-      // 开机键
-      .mobile-open-btn {
-        top: 211px; // 275px - 64px;
-        right: -27px;
+    }
+    &-sensors {
+      &::after,
+      &::before {
+        content: '';
+        position: absolute;
+      }
+      &::after {
+        background: lighten($device-panel, 8%);
+        border: 1px solid $device-panel;
+        border-radius: 4px;
+        box-shadow: 0 0 4px lighten($device-panel, 8%);
+        height: 7px;
+        left: 50%;
+        margin-left: -35px;
+        top: 8px;
+        width: 70px;
+      }
+      &::before {
+        background: radial-gradient(
+            farthest-corner at 20% 20%,
+            #6074bf 0,
+            transparent 40%
+          ),
+          radial-gradient(
+            farthest-corner at 80% 80%,
+            #513785 0,
+            #24555e 20%,
+            transparent 50%
+          );
+        box-shadow: 0 0 1px 1px rgba($light-color, 0.05);
+        border-radius: 50%;
+        height: 9px;
+        left: 50%;
+        margin-left: -60px;
+        top: 26px;
+        width: 9px;
+      }
+    }
+    &-btns {
+      background: $device-midnight-dark;
+      border-radius: 2px;
+      height: 32px;
+      left: -2px;
+      position: absolute;
+      top: 115px;
+      width: 3px;
+
+      &::after,
+      &::before {
+        background: $device-midnight-dark;
+        border-radius: 2px;
+        content: '';
+        height: 62px;
+        left: 0;
+        position: absolute;
+        width: 3px;
+      }
+
+      &::after {
+        top: 60px;
+      }
+      &::before {
+        top: 140px;
+      }
+    }
+    &-power {
+      background: $device-midnight-dark;
+      border-radius: 2px;
+      height: 100px;
+      right: -2px;
+      position: absolute;
+      top: 200px;
+      width: 3px;
+    }
+    &-home {
+      &::after,
+      &::before {
+        border: solid rgba($device-panel, 0.25);
+        border-width: 6px 0;
+        content: '';
+        height: 6px;
+        position: absolute;
         width: 6px;
-        height: 50px;
+        z-index: 9;
+      }
+      &::after {
+        right: 86px;
+        top: 0;
+      }
+      &::before {
+        bottom: 0;
+        left: 86px;
       }
     }
   }

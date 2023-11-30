@@ -301,7 +301,8 @@ const variables: any = [
 const EditorType = {
   EDITOR: 'editor',
   MOBILE: 'mobile',
-  FORM: 'form'
+  FORM: 'form',
+  DIALOG: 'dialog'
 };
 
 const editorLanguages = [
@@ -550,6 +551,15 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
     this.state.schema = this.getSchema(type);
   }
 
+  componentDidUpdate() {
+    const store = (window as any).editorStore;
+    if (this.state.type !== EditorType.DIALOG && store.dialogViewType) {
+      this.setState({
+        type: EditorType.DIALOG
+      });
+    }
+  }
+
   getSchema(type: string) {
     if (type === EditorType.FORM) {
       const schema = localStorage.getItem('editting_schema_form');
@@ -605,14 +615,23 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
     this.handlePreviewChange(!this.state.preview);
   };
 
-  handleTypeChange = (editorType: any) => {
+  handleTypeChange = (editorType: any, dialogPreviewMode?: string) => {
     const type = editorType || EditorType.EDITOR;
-    localStorage.setItem('editting_preview_type', type);
+    if (type !== EditorType.DIALOG) {
+      localStorage.setItem('editting_preview_type', type);
+    }
 
     this.setState({
       type: type,
       schema: this.getSchema(type)
     });
+
+    if (editorType === EditorType.DIALOG) {
+      (window as any).editorStore.setDialogViewType(dialogPreviewMode);
+    } else {
+      (window as any).editorStore.setPreviewDialogId();
+      (window as any).editorStore.setDialogViewType();
+    }
   };
 
   clearCache = () => {
@@ -669,7 +688,8 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
   }
 
   render() {
-    const {preview, type, curLanguage} = this.state;
+    const {preview, type, curLanguage, schema} = this.state;
+    const dialogPreviewMode = schema.dialogView?.dialogType;
     return (
       <div className="Editor-inner">
         <Portal container={() => document.querySelector('#headerBar') as any}>
@@ -696,6 +716,28 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
                 >
                   <Icon icon="h5-preview" title="移动模式" />
                 </div>
+                {dialogPreviewMode && (
+                  <div
+                    className={`Editor-view-mode-btn ${
+                      type === EditorType.DIALOG ? 'is-active' : ''
+                    }`}
+                    onClick={() => {
+                      this.handleTypeChange(
+                        EditorType.DIALOG,
+                        dialogPreviewMode
+                      );
+                    }}
+                  >
+                    <Icon
+                      icon={
+                        dialogPreviewMode === 'dialog'
+                          ? 'dialog-preview'
+                          : 'drawer-preview'
+                      }
+                      title="页面弹窗模式"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

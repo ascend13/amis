@@ -512,7 +512,7 @@ function SchemaFrom({
         // 添加弹窗事件后自动选中弹窗
         if (store.activeDialogPath) {
           let activeId = store.getSchemaByPath(
-            store.activeDialogPath.split('/')
+            store.activeDialogPath.split('/').filter(item => item !== '')
           )?.$$id;
           activeId && store.setPreviewDialogId(activeId);
           store.setActiveDialogPath('');

@@ -137,6 +137,7 @@ export const MainStore = types
     hoverRegion: '',
     activeId: '',
     previewDialogId: '', // 选择要进行编辑的弹窗id
+    dialogViewType: '', // 开启弹窗视图类型
     activeDialogPath: '', // 记录选中设计的弹窗path
     activeRegion: '', // 记录当前激活的子区域
     mouseMoveRegion: '', // 记录当前鼠标hover到的区域，后续需要优化（合并MouseMoveRegion和hoverRegion）
@@ -234,7 +235,14 @@ export const MainStore = types
       // 给编辑状态时的
       get filteredSchema() {
         let schema = self.schema;
-        if (self.previewDialogId) {
+        if (self.dialogViewType && schema.dialogView?.dialogType) {
+          const dialogView = schema.dialogView;
+          schema = {
+            type: dialogView.dialogType,
+            body: schema.body,
+            ...dialogView
+          };
+        } else if (self.previewDialogId) {
           let originDialogSchema = this.getSchema(self.previewDialogId);
           schema = {
             ...originDialogSchema,
@@ -250,7 +258,15 @@ export const MainStore = types
 
       // 给预览状态时的
       get filteredSchemaForPreview() {
-        const schema = JSONPipeOut(self.schema);
+        let schema = JSONPipeOut(self.schema);
+        if (self.dialogViewType && schema.dialogView?.dialogType) {
+          const dialogView = schema.dialogView;
+          schema = {
+            type: dialogView.dialogType,
+            body: schema.body,
+            ...dialogView
+          };
+        }
         return getEnv(self).schemaFilter?.(schema, true) ?? schema;
       },
 
@@ -1229,6 +1245,10 @@ export const MainStore = types
         // if (!self.panelKey && id) {
         //   self.panelKey = 'config';
         // }
+      },
+
+      setDialogViewType(type?: 'dialog' | 'drawer') {
+        self.dialogViewType = type ? type : '';
       },
 
       setActiveDialogPath(path: string) {

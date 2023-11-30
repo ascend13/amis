@@ -1,0 +1,13 @@
+// 手机模型device变量
+$device-midnight: hsl(210, 11%, 17%);
+$device-midnight-dark: darken($device-midnight, 10%);
+$device-purple: #c8bad3;
+$device-purple-dark: darken($device-purple, 10%);
+$device-starlight: #d3cdc7;
+$device-starlight-dark: darken($device-starlight, 10%);
+$device-red: #ec302b;
+$device-red-dark: darken($device-red, 10%);
+$device-blue: #98abbe;
+$device-blue-dark: darken($device-blue, 10%);
+$device-panel: #010101;
+$light-color: #fff !default;

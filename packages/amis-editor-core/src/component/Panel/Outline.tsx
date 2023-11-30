@@ -63,6 +63,7 @@ export class OutlinePanel extends React.Component<PanelProps> {
       store.changeOutlineTabsKey(key);
       if (key === 'component-outline') {
         store.setPreviewDialogId();
+        store.setDialogViewType();
       }
     }
   }
@@ -364,7 +365,17 @@ export class OutlinePanel extends React.Component<PanelProps> {
               onDragOver={this.handleDragOver}
               onDrop={this.handleDrop}
             >
-              {dialogOptions.length ? (
+              {store.dialogViewType ? (
+                store.root.children.length ? (
+                  <ul className="ae-Outline-list">
+                    {store.root.children.map((option, index) =>
+                      this.renderItem(option, index, 'dialogView')
+                    )}
+                  </ul>
+                ) : (
+                  <div>暂无数据</div>
+                )
+              ) : dialogOptions.length ? (
                 <ul className="ae-Outline-list">
                   {dialogOptions.map((option, index) =>
                     this.renderDialogItem(option, index)
