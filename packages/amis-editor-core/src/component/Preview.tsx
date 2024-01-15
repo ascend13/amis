@@ -103,7 +103,7 @@ export default class Preview extends Component<PreviewProps> {
 
     // 进入页面弹窗视图准备对应的schema
     this.dialogViewReaction = reaction(
-      () => store.dialogViewType && store.schema.dialogView?.dialogType,
+      () => store.dialogViewType && store.schema.dialogView?.type,
       flag => {
         if (flag) {
           const pageSchema = store.schema;
@@ -120,7 +120,7 @@ export default class Preview extends Component<PreviewProps> {
             ...dialogView,
             type: store.dialogViewType,
             title: title,
-            body: pageSchema.body,
+            // body: pageSchema.body,
             actions: actions || [
               {
                 type: 'button',
@@ -744,9 +744,6 @@ class SmartPreview extends React.Component<SmartPreviewProps> {
     }
     return this.props.env.getModalContainer;
   }
-
-  @autobind
-  getModalContainer() {}
 
   render() {
     const {editable, store, appLocale, autoFocus, env, data, manager, ...rest} =

@@ -243,6 +243,8 @@ export class BasicToolbarPlugin extends BasePlugin {
     const first = paths.pop()!;
     const host = node.host as EditorNodeType;
     const regionNode = node.parent as EditorNodeType;
+    // 判断是否弹窗或抽屉
+    const isDialog = schema?.type === 'dialog' || schema?.type === 'drawer';
 
     if (selections.length) {
       // 多选时的右键菜单
@@ -332,6 +334,13 @@ export class BasicToolbarPlugin extends BasePlugin {
       });
 
       menus.push('|');
+
+      if (isDialog) {
+        menus.push({
+          label: '新建空白弹窗',
+          onSelect: () => manager.copy(id)
+        });
+      }
 
       menus.push({
         label: '重复一份',

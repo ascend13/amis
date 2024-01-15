@@ -689,7 +689,7 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
 
   render() {
     const {preview, type, curLanguage, schema} = this.state;
-    const dialogPreviewMode = schema.dialogView?.dialogType;
+    const dialogPreviewMode = schema.dialogView?.type;
     return (
       <div className="Editor-inner">
         <Portal container={() => document.querySelector('#headerBar') as any}>
@@ -716,7 +716,7 @@ export default class AMisSchemaEditor extends React.Component<any, any> {
                 >
                   <Icon icon="h5-preview" title="移动模式" />
                 </div>
-                {dialogPreviewMode && (
+                {dialogPreviewMode && dialogPreviewMode !== 'empty' && (
                   <div
                     className={`Editor-view-mode-btn ${
                       type === EditorType.DIALOG ? 'is-active' : ''

@@ -48,7 +48,7 @@ export default class PageViewControl extends React.Component<
   }
 
   componentDidMount() {
-    const dialogViewType = this.props.data?.dialogView?.dialogType;
+    const dialogViewType = this.props.data?.dialogView?.type;
     this.setState({
       view: dialogViewType ? dialogViewType : 'empty'
     });

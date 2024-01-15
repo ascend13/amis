@@ -291,7 +291,7 @@ export class PagePlugin extends BasePlugin {
                 body: [
                   {
                     type: 'ae-pageViewControl',
-                    name: 'dialogView.dialogType',
+                    name: 'dialogView.type',
                     mode: 'normal',
                     asFormItem: true,
                     onChange: (

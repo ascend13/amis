@@ -235,10 +235,10 @@ export const MainStore = types
       // 给编辑状态时的
       get filteredSchema() {
         let schema = self.schema;
-        if (self.dialogViewType && schema.dialogView?.dialogType) {
+        if (self.dialogViewType && schema.dialogView?.type) {
           const dialogView = schema.dialogView;
           schema = {
-            type: dialogView.dialogType,
+            type: dialogView.type,
             body: schema.body,
             ...dialogView
           };
@@ -259,10 +259,10 @@ export const MainStore = types
       // 给预览状态时的
       get filteredSchemaForPreview() {
         let schema = JSONPipeOut(self.schema);
-        if (self.dialogViewType && schema.dialogView?.dialogType) {
+        if (self.dialogViewType && schema.dialogView?.type) {
           const dialogView = schema.dialogView;
           schema = {
-            type: dialogView.dialogType,
+            type: dialogView.type,
             body: schema.body,
             ...dialogView
           };
